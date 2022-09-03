@@ -2,6 +2,12 @@ version: '3'
 
 networks:
   laravel:
+    name: laravel
+  mysql:
+    # Joins existing network of this name (it was created by db container)
+    external: true
+    # Specify name so that it does not append stack name
+    name: mysql
 
 services:
   site:
@@ -18,28 +24,29 @@ services:
       - ./src:/var/www/html:delegated
     depends_on:
       - php
-      - redis
+      # - redis
+      # - mysql
+      # - mailhog
+    networks:
+      - laravel
       - mysql
-      - mailhog
-    networks:
-      - laravel
 
-  mysql:
-    image: mariadb:10.6
-    container_name: mysql
-    restart: unless-stopped
-    tty: true
-    ports:
-      - 3306:3306
-    environment:
-      MYSQL_DATABASE: homestead
-      MYSQL_USER: homestead
-      MYSQL_PASSWORD: secret
-      MYSQL_ROOT_PASSWORD: secret
-      SERVICE_TAGS: dev
-      SERVICE_NAME: mysql
-    networks:
-      - laravel
+  # mysql:
+  #   image: mysql:latest
+  #   container_name: mysql
+  #   restart: unless-stopped
+  #   tty: true
+  #   ports:
+  #     - 3306:3306
+  #   environment:
+  #     MYSQL_DATABASE: homestead
+  #     MYSQL_USER: homestead
+  #     MYSQL_PASSWORD: secret
+  #     MYSQL_ROOT_PASSWORD: secret
+  #     SERVICE_TAGS: dev
+  #     SERVICE_NAME: mysql
+  #   networks:
+  #     - laravel
 
   php:
     build:
@@ -53,15 +60,16 @@ services:
       - ./src:/var/www/html:delegated
     networks:
       - laravel
+      - mysql
 
-  redis:
-    image: redis:alpine
-    container_name: redis
-    restart: unless-stopped
-    ports:
-      - 6379:6379
-    networks:
-      - laravel
+  # redis:
+  #   image: redis:alpine
+  #   container_name: redis
+  #   restart: unless-stopped
+  #   ports:
+  #     - 6379:6379
+  #   networks:
+  #     - laravel
 
   composer:
     build:
@@ -80,19 +88,20 @@ services:
     entrypoint: ['composer', '--ignore-platform-reqs']
     networks:
       - laravel
+      - mysql
 
-  npm:
-    image: node:13.7
-    container_name: npm
-    volumes:
-      - ./src:/var/www/html
-    ports:
-      - 3000:3000
-      - 3001:3001
-    working_dir: /var/www/html
-    entrypoint: ['npm']
-    networks:
-      - laravel
+  # npm:
+  #   image: node:13.7
+  #   container_name: npm
+  #   volumes:
+  #     - ./src:/var/www/html
+  #   ports:
+  #     - 3000:3000
+  #     - 3001:3001
+  #   working_dir: /var/www/html
+  #   entrypoint: ['npm']
+  #   networks:
+  #     - laravel
 
   artisan:
     build:
@@ -104,18 +113,21 @@ services:
     container_name: artisan
     volumes:
       - ./src:/var/www/html:delegated
-    depends_on:
-      - mysql
+    # depends_on:
+    #   - mysql
     working_dir: /var/www/html
     entrypoint: ['php', '/var/www/html/artisan']
     networks:
       - laravel
+      - mysql
 
-  mailhog:
-    image: mailhog/mailhog:latest
-    container_name: mailhog
-    ports:
-      - 1025:1025
-      - 8025:8025
-    networks:
-      - laravel
+  # mailhog:
+  #   image: mailhog/mailhog:latest
+  #   container_name: mailhog
+  #   ports:
+  #     - 1025:1025
+  #     - 8025:8025
+  #   networks:
+  #     - laravel
+
+
